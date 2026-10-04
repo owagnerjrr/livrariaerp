@@ -2,6 +2,7 @@ node_modules
 dist
 packages/database/src/generated
 .local
+.vercel
 package-lock.json
 coverage
 test-results

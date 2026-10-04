@@ -1,5 +1,7 @@
 # Caramelo ERP
 
+Esta é a cópia para demonstração online no repositório `owagnerjrr/livrariaerp`. Instruções completas de Vercel, API Render, PostgreSQL dedicado, migrations, seed protegido e acesso: [docs/DEMO-ONLINE.md](docs/DEMO-ONLINE.md). O projeto original `owagnerjrr/carameloerp` permanece independente.
+
 ERP web para uma **rede de livrarias brasileiras**. Interface em português e base modular preparada para evoluir para SaaS. Esta etapa entrega livros, entrada/estoque por filial, PDV, caixa, trocas e devoluções; não é um ERP completo nem um serviço pronto para comercialização.
 
 ## O que já funciona

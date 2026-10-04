@@ -8,6 +8,7 @@ export default ts.config(
       "**/generated/**",
       "**/node_modules/**",
       ".local/**",
+      ".vercel/**",
       "work/**",
       "coverage/**",
     ],

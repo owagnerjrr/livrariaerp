@@ -4,15 +4,24 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const seed = process.argv.includes("--seed");
+const demoSeed = process.argv.includes("--demo-seed");
 const watching = process.argv.includes("--watch");
 const output = resolve(
   root,
-  seed ? ".local/seed.mjs" : "apps/api/dist/server.js",
+  demoSeed
+    ? "apps/api/dist/demo-seed.js"
+    : seed
+      ? ".local/seed.mjs"
+      : "apps/api/dist/server.js",
 );
 const options = {
   input: resolve(
     root,
-    seed ? "packages/database/prisma/seed.ts" : "apps/api/src/server.ts",
+    demoSeed
+      ? "packages/database/prisma/demo-seed.ts"
+      : seed
+        ? "packages/database/prisma/seed.ts"
+        : "apps/api/src/server.ts",
   ),
   external: (id) =>
     !id.startsWith(".") &&
@@ -79,7 +88,13 @@ if (watching) {
   const bundle = await rolldown(options);
   await bundle.write(options.output);
   await bundle.close();
-  console.log(seed ? "Seed compilado." : "API compilada.");
+  console.log(
+    demoSeed
+      ? "Seed online compilado."
+      : seed
+        ? "Seed compilado."
+        : "API compilada.",
+  );
   if (seed) {
     const child = spawn(process.execPath, [output], {
       cwd: root,

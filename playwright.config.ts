@@ -3,6 +3,7 @@ export default defineConfig({
   testDir: "tests",
   testMatch: [
     "browser.spec.ts",
+    "demo.browser.spec.ts",
     "stock.browser.spec.ts",
     "sales.browser.spec.ts",
     "operations.browser.spec.ts",
@@ -16,7 +17,10 @@ export default defineConfig({
   ],
   workers: 1,
   reporter: "list",
-  use: { baseURL: "http://localhost:5173", trace: "retain-on-failure" },
+  use: {
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173",
+    trace: "retain-on-failure",
+  },
   projects: [
     {
       name: "desktop",
