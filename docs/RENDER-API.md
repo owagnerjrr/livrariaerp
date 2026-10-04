@@ -51,8 +51,16 @@ Referências: https://render.com/docs/docker ; https://render.com/docs/deploys ;
 
 Use render.yaml como Blueprint do repositório owagnerjrr/livrariaerp. DATABASE_URL será preenchida automaticamente pela referência ao PostgreSQL caramelo-erp-demo já existente no mesmo workspace Render. O Blueprint não cria nem substitui o banco. Se criar um Web Service manualmente, o painel não importa automaticamente as variáveis do YAML: copie a Internal Database URL diretamente para DATABASE_URL e configure as demais variáveis conforme a tabela.
 
-Somente WEB_ORIGIN e DEMO_ADMIN_PASSWORD precisam ser informadas na criação do Blueprint. sync:false solicita o valor na criação, mas não em atualizações de um serviço existente; nesse caso preencha pelo painel. Não clique em Deploy Blueprint antes da autorização: esse botão inicia implantação, mesmo com Auto Deploy desativado.
+Na configuração definitiva publicada, WEB_ORIGIN está fixa no YAML e apenas DEMO_ADMIN_PASSWORD precisa ser informada na criação do Blueprint. sync:false solicita o valor na criação, mas não em atualizações de um serviço existente; nesse caso preencha pelo painel. Não clique em Deploy Blueprint antes da autorização: esse botão inicia implantação, mesmo com Auto Deploy desativado.
 
 DEMO_SEED_ON_START está true no Blueprint para o primeiro deploy. Depois da inicialização, altere para false no painel. Uma nova sincronização do Blueprint restaurará true enquanto o arquivo não for atualizado para false; isso não duplica nem apaga dados, porque o seed é idempotente.
 
 O entrypoint também verifica o nome declarado/confirmado do banco antes das migrations, tanto com seed true quanto false. A identificação do serviço PostgreSQL vem da referência ao recurso existente no Render; sem acesso ao painel não é possível confirmar a associação ou executar healthcheck remoto nesta preparação.
+
+## Origem definitiva da demo publicada
+
+WEB_ORIGIN está declarada no Blueprint como https://livrariaerp.vercel.app. Antes era sync:false, que não atualiza o valor no serviço existente durante um sync. A validação da API compara o header Origin exato com WEB_ORIGIN, sem confiar em Host ou X-Forwarded-Host. O proxy /api da Vercel continua apontando para https://livrariaerp-demo-api.onrender.com, conforme DEMO_API_ORIGIN já usado no build. Não substitua Origin pelo host do Render nem desative a proteção de origem.
+
+Depois de publicar este commit somente no remote demo, um Blueprint Sync aplica a origem ao serviço existente. Essa operação pode provocar redeploy; não foi executada nesta correção. Alternativamente, ajustar WEB_ORIGIN manualmente para o mesmo valor e aplicar a configuração/reiniciar a API. Não é necessário redeploy da Vercel se DEMO_API_ORIGIN já aponta para a API indicada e o proxy atual encaminha /api.
+
+Cookies permanecem HttpOnly, Secure e SameSite=Lax, sem Domain; o navegador acessa /api na mesma origem HTTPS do frontend. Nenhuma alteração em banco, DATABASE_URL, migrations, seed ou senha foi feita. Para publicar sem implantação automática, desative Auto Sync do Blueprint no painel antes do push; autoDeployTrigger:off do Web Service não desativa Auto Sync do Blueprint.

@@ -179,3 +179,59 @@ it("healthcheck confirma disponibilidade e falha quando o banco falha", async ()
     await app.close();
   }
 });
+
+it("origem definitiva aceita login via proxy sem confiar em forwarded-host", async () => {
+  const app = await buildApp({
+    db: {} as Database,
+    origin: "https://livrariaerp.vercel.app",
+    production: true,
+  });
+  try {
+    const allowed = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      headers: {
+        origin: "https://livrariaerp.vercel.app",
+        host: "livrariaerp-demo-api.onrender.com",
+        "x-forwarded-host": "livrariaerp.vercel.app",
+        "x-forwarded-proto": "https",
+      },
+      payload: {},
+    });
+    expect(allowed.statusCode).toBe(400); // Passa pela origem e chega à validação dos campos, sem banco.
+    for (const origin of [
+      undefined,
+      "https://livrariaerp-demo-api.onrender.com",
+      "https://untrusted.example",
+      "https://livrariaerp.vercel.app.evil.example",
+    ]) {
+      const rejected = await app.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        headers: {
+          ...(origin ? { origin } : {}),
+          "x-forwarded-host": "livrariaerp.vercel.app",
+        },
+        payload: {},
+      });
+      expect(rejected.statusCode).toBe(403);
+      expect(rejected.json().message).toBe(
+        "Origem da requisição não permitida.",
+      );
+      expect(rejected.headers["access-control-allow-origin"]).toBeUndefined();
+    }
+    const logout = await app.inject({
+      method: "POST",
+      url: "/api/auth/logout",
+      headers: { origin: "https://livrariaerp.vercel.app" },
+    });
+    expect(logout.statusCode).toBe(200);
+    const cookie = String(logout.headers["set-cookie"]);
+    expect(cookie).toContain("Secure");
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Lax");
+    expect(cookie).not.toContain("Domain=");
+  } finally {
+    await app.close();
+  }
+});

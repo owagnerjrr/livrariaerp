@@ -22,7 +22,7 @@ services:
           name: caramelo-erp-demo
           property: connectionString
       - key: WEB_ORIGIN
-        sync: false
+        value: https://livrariaerp.vercel.app
       - key: DEMO_DATABASE_NAME
         value: caramelo_erp
       - key: DEMO_SEED_CONFIRM
