@@ -1,6 +1,6 @@
 # API demo no Render — configuração revisada
 
-Trabalhar somente em livrariaerp. Docker mantém Node 24 e o build do monorepo; Prisma CLI permanece como dependência de runtime para migrations. Nenhum segredo é usado no build. O banco existente não é declarado no Blueprint, para evitar provisionar outro banco.
+Trabalhar somente em livrariaerp. Docker mantém Node 24 e o build do monorepo; Prisma CLI permanece como dependência de runtime para migrations. Nenhum segredo é usado no build. O banco existente é apenas referenciado por fromDatabase (caramelo-erp-demo), sem declaração databases ou provisionamento de outro banco. O Render injeta a connectionString interna; nenhuma URL é armazenada no YAML.
 
 ## Tela do Render
 
@@ -46,3 +46,13 @@ Antes do primeiro deploy, reserve/importe o projeto frontend para conhecer a ori
 Docker não está instalado neste ambiente: a imagem deve ser construída pelo Render no primeiro deploy autorizado. O build Node/Prisma é validado localmente. Não foram executados testes que criam/apagam bancos, nem fixtures contra o banco principal ou Render.
 
 Referências: https://render.com/docs/docker ; https://render.com/docs/deploys ; https://render.com/docs/free ; https://render.com/docs/postgresql-creating-connecting
+
+## Redução de configuração manual
+
+Use render.yaml como Blueprint do repositório owagnerjrr/livrariaerp. DATABASE_URL será preenchida automaticamente pela referência ao PostgreSQL caramelo-erp-demo já existente no mesmo workspace Render. O Blueprint não cria nem substitui o banco. Se criar um Web Service manualmente, o painel não importa automaticamente as variáveis do YAML: copie a Internal Database URL diretamente para DATABASE_URL e configure as demais variáveis conforme a tabela.
+
+Somente WEB_ORIGIN e DEMO_ADMIN_PASSWORD precisam ser informadas na criação do Blueprint. sync:false solicita o valor na criação, mas não em atualizações de um serviço existente; nesse caso preencha pelo painel. Não clique em Deploy Blueprint antes da autorização: esse botão inicia implantação, mesmo com Auto Deploy desativado.
+
+DEMO_SEED_ON_START está true no Blueprint para o primeiro deploy. Depois da inicialização, altere para false no painel. Uma nova sincronização do Blueprint restaurará true enquanto o arquivo não for atualizado para false; isso não duplica nem apaga dados, porque o seed é idempotente.
+
+O entrypoint também verifica o nome declarado/confirmado do banco antes das migrations, tanto com seed true quanto false. A identificação do serviço PostgreSQL vem da referência ao recurso existente no Render; sem acesso ao painel não é possível confirmar a associação ou executar healthcheck remoto nesta preparação.

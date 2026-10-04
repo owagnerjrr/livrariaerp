@@ -128,3 +128,54 @@ it("entrypoint recusa PostgreSQL local antes de executar migrations", () => {
   expect(result.stdout).not.toContain("prisma migrate");
   expect(result.stderr).not.toContain("secret-sentinel");
 });
+
+it("entrypoint recusa banco remoto diferente antes das migrations", () => {
+  const result = spawnSync(process.execPath, ["scripts/render-start.mjs"], {
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      APP_ENV: "demo",
+      DEMO_SEED_ON_START: "false",
+      DATABASE_URL:
+        "postgresql://fixture:secret-sentinel@postgres.demo.example/outro",
+      DEMO_DATABASE_NAME: "caramelo_erp",
+      DEMO_SEED_CONFIRM: "caramelo_erp",
+    },
+    encoding: "utf8",
+  });
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toContain("Banco demo deve corresponder");
+  expect(result.stdout).not.toContain("prisma migrate");
+  expect(result.stderr).not.toContain("secret-sentinel");
+});
+
+import { buildApp } from "../apps/api/src/app.js";
+import type { Database } from "../packages/database/src/index.js";
+it("healthcheck confirma disponibilidade e falha quando o banco falha", async () => {
+  let failure = false;
+  let calls = 0;
+  const db = {
+    $queryRaw: async () => {
+      calls++;
+      if (failure) throw new Error("Database unavailable");
+      return [{ value: 1 }];
+    },
+  } as unknown as Database;
+  const app = await buildApp({
+    db,
+    origin: "https://demo.example",
+    production: true,
+  });
+  try {
+    const healthy = await app.inject({ method: "GET", url: "/api/health" });
+    expect(healthy.statusCode).toBe(200);
+    expect(healthy.json()).toEqual({ status: "ok" });
+    failure = true;
+    expect(
+      (await app.inject({ method: "GET", url: "/api/health" })).statusCode,
+    ).toBe(500);
+    expect(calls).toBe(2);
+  } finally {
+    await app.close();
+  }
+});

@@ -4,6 +4,7 @@ services:
     runtime: docker
     plan: free
     region: virginia
+    repo: https://github.com/owagnerjrr/livrariaerp
     branch: main
     autoDeployTrigger: off
     dockerfilePath: ./Dockerfile
@@ -17,7 +18,9 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: caramelo-erp-demo
+          property: connectionString
       - key: WEB_ORIGIN
         sync: false
       - key: DEMO_DATABASE_NAME
@@ -27,6 +30,6 @@ services:
       - key: DEMO_ADMIN_PASSWORD
         sync: false
       - key: DEMO_SEED_ON_START
-        value: "false"
+        value: "true"
       - key: SESSION_HOURS
         value: "4"

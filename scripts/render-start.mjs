@@ -20,6 +20,15 @@ if (
   ["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(database.hostname)
 )
   throw new Error("Inicialização Render exige PostgreSQL remoto.");
+if (
+  !process.env.DEMO_DATABASE_NAME ||
+  decodeURIComponent(database.pathname.slice(1)) !==
+    process.env.DEMO_DATABASE_NAME ||
+  process.env.DEMO_SEED_CONFIRM !== process.env.DEMO_DATABASE_NAME
+)
+  throw new Error(
+    "Banco demo deve corresponder a DEMO_DATABASE_NAME e DEMO_SEED_CONFIRM antes das migrations.",
+  );
 run("npm", ["run", "db:migrate"]);
 if (process.env.DEMO_SEED_ON_START === "true")
   run(process.execPath, ["apps/api/dist/demo-seed.js"]);
