@@ -32,11 +32,13 @@ export function validateDemoSeed(environment: NodeJS.ProcessEnv) {
     environment.NODE_ENV === "test" && database.endsWith("_demo_test");
   if (
     !["postgresql:", "postgres:"].includes(url.protocol) ||
-    (!database.endsWith("_demo") && !testing) ||
+    (!database.endsWith("_demo") &&
+      !testing &&
+      environment.DEMO_DATABASE_NAME !== database) ||
     environment.DEMO_SEED_CONFIRM !== database
   )
     throw new Error(
-      "Seed exige banco exclusivo terminado em _demo e DEMO_SEED_CONFIRM igual ao nome do banco.",
+      "Seed exige banco exclusivo declarado em DEMO_DATABASE_NAME ou terminado em _demo, com confirmação exata em DEMO_SEED_CONFIRM.",
     );
   if (
     !testing &&

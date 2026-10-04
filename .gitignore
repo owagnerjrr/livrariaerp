@@ -21,3 +21,9 @@ packages/database/src/generated/
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
+*.tmp
+*.sqlite
+*.sqlite3
+*.db
+screenshots/
+traces/

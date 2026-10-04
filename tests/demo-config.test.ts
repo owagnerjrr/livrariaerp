@@ -63,3 +63,68 @@ it("proxy rejeita ausência, HTTP, localhost e credenciais", () => {
   ])
     expect(() => demoRoutes(value)).toThrow();
 });
+
+it("seed aceita banco Render explicitamente declarado e confirmado", () => {
+  const render = {
+    ...valid,
+    DATABASE_URL:
+      "postgresql://fixture:fake@postgres.demo.example/caramelo_erp",
+    DEMO_DATABASE_NAME: "caramelo_erp",
+    DEMO_SEED_CONFIRM: "caramelo_erp",
+  };
+  expect(validateDemoSeed(render)).toBe(valid.DEMO_ADMIN_PASSWORD);
+  expect(() =>
+    validateDemoSeed({ ...render, DEMO_DATABASE_NAME: undefined }),
+  ).toThrow();
+  expect(() =>
+    validateDemoSeed({ ...render, DEMO_SEED_CONFIRM: "outro" }),
+  ).toThrow();
+  expect(() =>
+    validateDemoSeed({ ...render, APP_ENV: "production" }),
+  ).toThrow();
+});
+
+import { spawnSync } from "node:child_process";
+it("produção aceita PORT Render e recusa banco local/origem inválida", () => {
+  const environment = {
+    ...process.env,
+    NODE_ENV: "production",
+    HOST: "0.0.0.0",
+    PORT: "10000",
+    DATABASE_URL: valid.DATABASE_URL,
+    WEB_ORIGIN: "https://demo.example",
+  };
+  const run = (changes: Record<string, string | undefined>) =>
+    spawnSync(process.execPath, ["apps/api/src/config.ts"], {
+      env: { ...environment, ...changes },
+      encoding: "utf8",
+    });
+  expect(run({}).status).toBe(0);
+  for (const changes of [
+    { PORT: undefined },
+    { DATABASE_URL: "postgresql://fixture:fake@localhost/caramelo_erp" },
+    { WEB_ORIGIN: "https://demo.example/path" },
+    { WEB_ORIGIN: "http://demo.example" },
+  ])
+    expect(run(changes).status).not.toBe(0);
+});
+
+it("entrypoint recusa PostgreSQL local antes de executar migrations", () => {
+  const result = spawnSync(process.execPath, ["scripts/render-start.mjs"], {
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      APP_ENV: "demo",
+      DEMO_SEED_ON_START: "false",
+      DATABASE_URL:
+        "postgresql://fixture:secret-sentinel@127.0.0.1/caramelo_erp",
+    },
+    encoding: "utf8",
+  });
+  expect(result.status).not.toBe(0);
+  expect(result.stderr).toContain(
+    "Inicialização Render exige PostgreSQL remoto.",
+  );
+  expect(result.stdout).not.toContain("prisma migrate");
+  expect(result.stderr).not.toContain("secret-sentinel");
+});

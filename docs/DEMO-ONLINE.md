@@ -12,44 +12,7 @@ Fontes: [Vercel rewrites](https://vercel.com/docs/routing/rewrites), [Build Outp
 
 ## 1. Backend e PostgreSQL no Render
 
-Importe este repositório como um novo Blueprint usando `render.yaml`. Verifique que os nomes `livrariaerp-demo-api` e `livrariaerp-demo-db` não representam serviços existentes. Não associe recursos de produção. Confirme os planos/custos antes de criar; o arquivo sugere os planos gratuitos.
-
-- Raiz: repositório inteiro, não `apps/api`.
-- Node: 24.21.0.
-- Build: `npm ci --include=dev && npm run build:demo:api`.
-- Start: `npm run db:migrate && npm run start:api`.
-- Healthcheck: `/api/health`.
-- PostgreSQL: `livrariaerp_demo`, usuário dedicado; use a conexão interna gerada pelo Render. A lista de IPs externos começa vazia.
-
-Cadastre **somente no Render**:
-
-| Variável              | Valor                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`        | URL interna do banco demo, fornecida pelo Render; nunca publique                    |
-| `NODE_ENV`            | `production`                                                                        |
-| `APP_ENV`             | `demo`                                                                              |
-| `HOST`                | `0.0.0.0`                                                                           |
-| `PORT`                | Porta atribuída pelo Render; não fixe 3333 no serviço remoto                        |
-| `WEB_ORIGIN`          | Origem HTTPS definitiva do frontend, sem barra final                                |
-| `SESSION_HOURS`       | `4`                                                                                 |
-| `DEMO_SEED_CONFIRM`   | `livrariaerp_demo` (nome exato do banco)                                            |
-| `DEMO_ADMIN_PASSWORD` | Senha exclusiva de demonstração com pelo menos 12 caracteres; não reutilize a local |
-
-As migrations são aplicadas antes de abrir a API; não há `reset`, `db push`, nem seed automático em cada reinício. Comando explícito de migrations:
-
-```bash
-npm run db:migrate
-```
-
-Depois do primeiro deploy, execute **uma vez no ambiente do serviço**:
-
-```bash
-npm run db:seed:demo
-```
-
-Se o plano não oferecer shell/one-off job, altere temporariamente o Start Command para `npm run db:migrate && npm run db:seed:demo && npm run start:api`, faça um deploy e volte ao comando padrão. O seed é idempotente e não repõe saldos nem redefine senhas em retries. Não envie credenciais pelo Git ou chat. Não rode esse comando usando o `.env` do Caramelo original.
-
-O seed exige APP_ENV=demo, nome dedicado terminado em `_demo` e confirmação exata; recusa PostgreSQL local, outras empresas ou usuários de uma instalação existente. A exceção de localhost exige NODE_ENV=test e banco terminado em `_demo_test`, exclusivamente para verificação automatizada. Não se permite usar o seed de desenvolvimento existente em NODE_ENV=production.
+Consulte [configuração revisada do Render](RENDER-API.md). Usar Docker na raiz e o PostgreSQL **caramelo-erp-demo**, já criado em **Virginia (US East)**, banco **caramelo_erp**. O Blueprint não cria outro banco. Não fazer deploy antes da revisão dos campos e variáveis. Migrations e seed são executados pelo entrypoint somente no ambiente remoto autorizado.
 
 ## 2. Frontend na Vercel
 

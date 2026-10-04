@@ -1,40 +1,32 @@
-# Somente recursos novos de DEMO. Confirme os planos/custos no painel antes de criar.
 services:
   - type: web
     name: livrariaerp-demo-api
-    runtime: node
+    runtime: docker
     plan: free
-    region: oregon
+    region: virginia
     branch: main
     autoDeployTrigger: off
-    buildCommand: npm ci --include=dev && npm run build:demo:api
-    startCommand: npm run db:migrate && npm run start:api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_VERSION
-        value: 24.21.0
       - key: NODE_ENV
         value: production
       - key: APP_ENV
         value: demo
       - key: HOST
         value: 0.0.0.0
+      - key: DATABASE_URL
+        sync: false
       - key: WEB_ORIGIN
         sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: livrariaerp-demo-db
-          property: connectionString
+      - key: DEMO_DATABASE_NAME
+        value: caramelo_erp
       - key: DEMO_SEED_CONFIRM
-        value: livrariaerp_demo
+        value: caramelo_erp
       - key: DEMO_ADMIN_PASSWORD
         sync: false
+      - key: DEMO_SEED_ON_START
+        value: "false"
       - key: SESSION_HOURS
-        value: 4
-databases:
-  - name: livrariaerp-demo-db
-    databaseName: livrariaerp_demo
-    user: livrariaerp_demo
-    plan: free
-    region: oregon
-    ipAllowList: []
+        value: "4"

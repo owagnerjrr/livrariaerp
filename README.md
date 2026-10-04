@@ -266,3 +266,5 @@ Recebíveis do PDV, baixas totais/parciais, previsão, reversão administrativa 
 ## Transferências entre filiais
 
 Estoque → Transferências: preparação, envio com trânsito exclusivo, scanner, recebimentos parciais, divergências e retorno controlado. Reutiliza StockDocument/StockMovement/moveStock, com contrapartidas atômicas e isolamento por filial. Políticas, permissões e limites: [docs/TRANSFERENCIAS.md](docs/TRANSFERENCIAS.md).
+
+Configuração da API de demonstração no Render: [docs/RENDER-API.md](docs/RENDER-API.md). Usar o banco existente em Virginia; nenhum deploy automático é realizado pela preparação.

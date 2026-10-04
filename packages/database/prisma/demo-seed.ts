@@ -2,7 +2,8 @@ import { config } from "dotenv";
 import { resolve } from "node:path";
 import { createDatabase } from "../src/index.js";
 import { seedOnlineDemo, validateDemoSeed } from "./demo-data.js";
-config({ path: resolve(process.cwd(), ".env"), quiet: true });
+if (process.env.NODE_ENV !== "production")
+  config({ path: resolve(process.cwd(), ".env"), quiet: true });
 validateDemoSeed(process.env);
 const db = createDatabase(process.env.DATABASE_URL!);
 try {
